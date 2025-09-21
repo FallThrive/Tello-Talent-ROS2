@@ -144,6 +144,33 @@ rclcpp_components_register_nodes(tello_joy_node "tello_joy::TelloJoyNode")
 set(node_plugins "${node_plugins}tello_joy::TelloJoyNode;$<TARGET_FILE:tello_joy_node>\n")
 
 #=============
+# Tello key node 
+#============= 
+
+set(KEY_NODE_SOURCES 
+  src/tello_key_node.cpp)
+
+set(KEY_NODE_DEPS 
+  rclcpp_components 
+  class_loader 
+  geometry_msgs 
+  rclcpp 
+  sensor_msgs 
+  tello_msgs)
+
+add_library(tello_key_node SHARED 
+  ${KEY_NODE_SOURCES})
+
+target_compile_definitions(tello_key_node 
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+
+ament_target_dependencies(tello_key_node 
+  ${KEY_NODE_DEPS})
+
+rclcpp_components_register_nodes(tello_key_node "tello_driver::TelloKeyNode")
+set(node_plugins "${node_plugins}tello_driver::TelloKeyNode;$<TARGET_FILE:tello_key_node>\n")
+
+#=============
 # Export incantations, see https://github.com/ros2/demos/blob/master/composition/CMakeLists.txt
 #=============
 
@@ -182,13 +209,24 @@ add_executable(tello_joy_main
 ament_target_dependencies(tello_joy_main
   ${JOY_NODE_DEPS})
 
+#============= 
+# Tello key main, statically linked to make IDE debugging easier 
+#============= 
+
+add_executable(tello_key_main 
+  src/tello_key_main.cpp 
+  ${KEY_NODE_SOURCES})
+
+ament_target_dependencies(tello_key_main 
+  ${KEY_NODE_DEPS})
+
 #=============
 # Install
 #=============
 
 # Install nodes
 install(
-  TARGETS tello_driver_node tello_joy_node
+  TARGETS tello_driver_node tello_joy_node tello_key_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -196,7 +234,7 @@ install(
 
 # Install executables
 install(
-  TARGETS tello_driver_main tello_joy_main tello_emulator
+  TARGETS tello_driver_main tello_joy_main tello_key_main tello_emulator
   DESTINATION lib/${PROJECT_NAME}
 )
 
