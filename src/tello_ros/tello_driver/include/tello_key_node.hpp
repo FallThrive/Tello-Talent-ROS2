@@ -30,31 +30,30 @@ constexpr char KEY_TAKEOFF = 't';           // 起飞
 constexpr char KEY_LAND = 'b';              // 降落
 constexpr char KEY_QUIT = 'q';              // 退出
 
-    class TelloKeyNode : public rclcpp::Node
-    {
-    public:
-        explicit TelloKeyNode(const rclcpp::NodeOptions &options);
+class TelloKeyNode : public rclcpp::Node
+{
+public:
+    explicit TelloKeyNode(const rclcpp::NodeOptions &options);
+    ~TelloKeyNode();
 
-        ~TelloKeyNode();
-
-    private:
-        // 发布速度指令
-        rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
-        
-        // 调用无人机动作服务
-        rclcpp::Client<tello_msgs::srv::TelloAction>::SharedPtr tello_client_;
-        
-        // 键盘输入读取线程
-        std::thread input_thread_;
-        
-        // 读取键盘输入的函数
-        void readKeyboardInput();
-        
-        // 检查是否有键盘输入的函数
-        int kbhit();
-        
-        // 获取按键输入
-        char getKey();
-    };
+private:
+    // 发布速度指令
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+    
+    // 调用无人机动作服务
+    rclcpp::Client<tello_msgs::srv::TelloAction>::SharedPtr tello_client_;
+    
+    // 键盘输入读取线程
+    std::thread input_thread_;
+    
+    // 读取键盘输入的函数
+    void readKeyboardInput();
+    
+    // 检查是否有键盘输入的函数
+    int kbhit();
+    
+    // 获取按键输入
+    char getKey();
+};
 
 } // namespace tello_key
