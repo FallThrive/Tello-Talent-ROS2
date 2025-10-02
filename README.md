@@ -33,11 +33,13 @@ cd ~/WorkSpace/RMTT-ROS2	# 以自己的项目目录为准
 chmod +x src/tello_ros/tello_description/src/replace.py
 ```
 
-原项目的`tello_gazebo`功能包暂时并不适配Gazebo Harmonic版本，因此编译时建议跳过该功能包
+原项目的`tello_gazebo`功能包适配的是Gazabo Classic版本，因此未安装Gazabo Classic（例如安装的为Gazebo Harmonic）建议跳过此功能包的编译
+
+此外，如未完成`ORB-SLAM3`部署或是不需要该功能，请跳过`orbslam3`功能包的编译
 
 ```
 cd ~/WorkSpace/RMTT-ROS2	# 以自己的项目目录为准
-colcon build --packages-skip tello_gazebo
+colcon build --packages-select ros2_shared tello_description tello_driver tello_msgs
 ```
 
 ## 新特性
@@ -77,15 +79,18 @@ ros2 run tello_driver tello_key_main
 ## 鸣谢
 
 - `ros2_shared` 来自 https://github.com/ptrmu/ros2_shared
-
-- `tello_ros` 来自 https://github.com/clydemcqueen/tello_ros
+- `tello_ros` 修改自 https://github.com/clydemcqueen/tello_ros
+- `tello_slam` 修改自 https://github.com/zang09/ORB_SLAM3_ROS2
 
 ## ToDoList
 
 - [x] 编译`tello_ros`原项目，在ROS2-humble中成功实现基本功能
 - [x] 使用键盘控制无人机起降与运动
-- [ ] 使用大疆RMTT开源控制器拓展配件，连接其他wifi控制
-- [ ] 部署ORB-SLAM并测试建图
+- [ ] 部署`ORB-SLAM3`并实现建图
+  - [x] 部署`ORB-SLAM3`以及`ORB_SLAM3_ROS2`项目并成功编译
+  - [x] 完成tello相机的标定
+  - [x] 精简功能包，移除不需要的配置文件等
+  - [ ] 测试SLAM建图效果
+- [ ] 使用大疆RMTT开源控制器拓展配件，使用路由器模式连接其他路由器控制
 - [ ] 重构`tello_gazebo`功能包，适配Gazebo Harmonic
 - [ ] 基于YOLO实现目标跟随
-
