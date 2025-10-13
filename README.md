@@ -1,6 +1,6 @@
-# RMTT-ROS2
+# Tello-Talent-ROS2
 
-此项目是基于[tello_ros](https://github.com/clydemcqueen/tello_ros)项目的二次开发，适应大疆RoboMaster Tello Talent (RMTT)无人机的拓展配件特性，并在ROS2-humble环境中进行测试
+此项目是基于[tello_ros](https://github.com/clydemcqueen/tello_ros)项目的二次开发，使用大疆RoboMaster Tello Talent (RMTT)无人机，集成ORB_SLAM3，并在ROS2-humble环境中进行测试
 
 [tello_ros](https://github.com/clydemcqueen/tello_ros)项目的详细说明请参阅[src/tello_ros/README.md](src/tello_ros/README.md)
 
@@ -12,34 +12,87 @@
 wget http://fishros.com/install -O fishros && . fishros
 ```
 
-在项目首次编译前请如下运行命令安装相关依赖，[tello_ros](https://github.com/clydemcqueen/tello_ros)项目并不直接基于[DJITelloPy](https://github.com/damiafuentes/DJITelloPy)实现，而是使用UDP与RMTT无人机通信，因此无需额外安装`djitellopy`
+正式部署之前需要安装相关依赖
 
 ```
+# 安装asio
 sudo apt install libasio-dev
+
+# 安装ros附加功能包
 sudo apt install ros-humble-cv-bridge ros-humble-camera-calibration-parsers
+
+# 确保当前Python环境下已经安装以下库
+pip3 install catkin_pkg empy==3.3.4 lark numpy	# 也可使用conda等工具
+
+# 下载仓库
+cd ~/WorkSpace	# 自定义一个下载目录
+git clone https://github.com/FallThrive/Tello-Talent-ROS2.git tello_ws
 ```
 
-将此项目仓库下载到本地
+### 基本安装
 
-```
-cd ~/WorkSpace	# 以自己的下载目录为准
-git clone https://github.com/FallThrive/RMTT-ROS2.git
-```
-
-在项目目录路径打开终端
-
-```
-cd ~/WorkSpace/RMTT-ROS2	# 以自己的项目目录为准
-chmod +x src/tello_ros/tello_description/src/replace.py
-```
+编译`ros2_shared` `tello_description` `tello_driver` `tello_msgs`四个功能包即可实现无人机基本飞行功能
 
 原项目的`tello_gazebo`功能包适配的是Gazabo Classic版本，因此未安装Gazabo Classic（例如安装的为Gazebo Harmonic）建议跳过此功能包的编译
 
-此外，如未完成`ORB-SLAM3`部署或是不需要该功能，请跳过`orbslam3`功能包的编译
+```
+cd ~/WorkSpace/tello_ws	# 以自己的项目目录为准
+chmod +x src/tello_ros/tello_description/src/replace.py
+colcon build --symlink-install --packages-select ros2_shared tello_description tello_driver tello_msgs
+```
+
+### 可选安装：tello_slam
+
+#### 1. 安装Pangolin
+
+下载`Pangolin`到自定义目录，`Pangolin`被拆分为几个组件，安装时可以只包含所需的组件，大多数依赖项都是可选的，详细的说明可以直接参阅[官方文档](https://github.com/stevenlovegrove/Pangolin)
 
 ```
-cd ~/WorkSpace/RMTT-ROS2	# 以自己的项目目录为准
-colcon build --packages-select ros2_shared tello_description tello_driver tello_msgs
+# 下载仓库
+cd ~/Source	# 自定义一个下载目录
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+cd Pangolin
+
+# 安装依赖项
+./scripts/install_prerequisites.sh recommended	# 这里只安装了必需的
+
+# 配置与编译（也可使用Ninja提高编译速度）
+cmake -B build
+cmake --build build
+sudo cmake --build build --target install
+
+# 安装Python绑定
+cmake --build build -t pypangolin_pip_install
+```
+
+#### 2. 安装ORB_SLAM3
+
+首先下载ORB_SLAM3的仓库，详细说明可以查阅[官方文档](https://github.com/UZ-SLAMLab/ORB_SLAM3)，这里推荐使用开发者zang09修改后的[仓库](https://github.com/zang09/ORB-SLAM3-STEREO-FIXED)，从C++11支持到了C++14，在ROS2的foxy（zang09测试）和humble环境中通过了测试
+
+```
+cd ~/Source	# 自定义一个安装目录
+git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git ORB_SLAM3				# 原版
+git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3	# 推荐
+
+cd ORB_SLAM3
+chmod +x build.sh
+./build.sh
+
+# 安装Sophus
+cd Thirdparty/Sophus/build
+sudo make install
+```
+
+#### 3. 编译tello_slam功能包
+
+设置[FindORB_SLAM3.cmake](src/tello_slam/CMakeModules/FindORB_SLAM3.cmake)里第8行`ORB_SLAM3_ROOT_DIR`为自己的ORB_SLAM3路径
+
+设置[CMakeLists.txt](src/tello_slam/CMakeLists.txt)里第5行`ENV{PYTHONPATH}`为自己的ROS Python功能包路径
+
+```
+cd ~/WorkSpace/tello_ws	# 以自己的项目目录为准
+tar -xf src/tello_slam/vocabulary/ORBvoc.txt.tar.gz -C src/tello_slam/vocabulary
+colcon build --symlink-install --packages-select tello_slam
 ```
 
 ## 新特性
@@ -90,7 +143,7 @@ ros2 run tello_driver tello_key_main
   - [x] 部署`ORB-SLAM3`以及`ORB_SLAM3_ROS2`项目并成功编译
   - [x] 完成tello相机的标定
   - [x] 精简功能包，移除不需要的配置文件等
-  - [ ] 测试SLAM建图效果
+  - [ ] 将点云数据发布到ROS话题
 - [ ] 使用大疆RMTT开源控制器拓展配件，使用路由器模式连接其他路由器控制
 - [ ] 重构`tello_gazebo`功能包，适配Gazebo Harmonic
 - [ ] 基于YOLO实现目标跟随
