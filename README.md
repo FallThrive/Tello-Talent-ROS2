@@ -63,6 +63,9 @@ sudo cmake --build build --target install
 
 # 安装Python绑定
 cmake --build build -t pypangolin_pip_install
+
+# 添加到LD_LIBRARY_PATH环境变量
+echo 'export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
 ```
 
 #### 2. 安装ORB_SLAM3
@@ -119,15 +122,44 @@ Hold a button to move, release to stop.
 
 如果需要修改键盘控制的无人机速度，可以修改[tello_key_node.hpp](src/tello_ros/tello_driver/include/tello_key_node.hpp)中的`LINEAR_SPEED`与`ANGULAR_SPEED`
 
-在一个终端运行`tello_driver_main`节点，另一个终端运行`tello_key_main`节点以进行使用
+在项目目录打开终端，一个终端运行`tello_driver_main`节点，另一个终端运行`tello_key_main`节点以进行使用
 
 ```
 # 终端1
+. install/setup.bash
 ros2 run tello_driver tello_driver_main
 
 # 终端2
+. install/setup.bash
 ros2 run tello_driver tello_key_main
 ```
+
+### ORB_SLAM3
+
+参考[ORB_SLAM3_ROS2](https://github.com/zang09/ORB_SLAM3_ROS2)项目，部署在`tello_slam`，可调用ORB_SLAM3进行建图
+
+tello系列无人机搭载的为单目相机，并且SDK提供的并不是完整IMU数据，因此这里只保留了单目相机`mono`模式，默认使用ORB词汇表[src/tello_slam/vocabulary/ORBvoc.txt](src/tello_slam/vocabulary/ORBvoc.txt.tar.gz)和tello相机配置文件[src/tello_slam/config/tello_cam.yaml](src/tello_slam/config/tello_cam.yaml)
+
+此外，`mono`节点将点云数据发布到`~pointcloud`话题，消息类型为`sensor_msgs/PointCloud2`，可在rviz2中查看
+
+在项目目录中打开终端，运行如下命令以使用
+
+```
+# 终端1
+. install/setup.bash
+ros2 run tello_driver tello_driver_main	# 或启动包含该节点的launch文件
+
+# 终端2
+. install/setup.bash
+# 使用默认配置文件
+ros2 run tello_slam mono
+# 或者，指定配置文件
+ros2 run tello_slam mono path_to_vocabulary path_to_settings
+# 例如
+ros2 run tello_slam mono src/tello_slam/vocabulary/ORBvoc.txt src/tello_slam/config/tello_cam.yaml
+```
+
+运行后，关键帧轨迹（Key Frame Trajectory）将被保存至`src/tello_slam/results/`文件夹下
 
 ## 鸣谢
 
@@ -139,11 +171,8 @@ ros2 run tello_driver tello_key_main
 
 - [x] 编译`tello_ros`原项目，在ROS2-humble中成功实现基本功能
 - [x] 使用键盘控制无人机起降与运动
-- [ ] 部署`ORB-SLAM3`并实现建图
-  - [x] 部署`ORB-SLAM3`以及`ORB_SLAM3_ROS2`项目并成功编译
-  - [x] 完成tello相机的标定
-  - [x] 精简功能包，移除不需要的配置文件等
-  - [ ] 将点云数据发布到ROS话题
+- [x] 部署`ORB-SLAM3`并发布点云到ROS话题
+- [ ] 部署`OctoMap`并发布地图到ROS话题
+- [ ] 基于YOLO实现目标跟随
 - [ ] 使用大疆RMTT开源控制器拓展配件，使用路由器模式连接其他路由器控制
 - [ ] 重构`tello_gazebo`功能包，适配Gazebo Harmonic
-- [ ] 基于YOLO实现目标跟随
