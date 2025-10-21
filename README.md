@@ -19,7 +19,10 @@ wget http://fishros.com/install -O fishros && . fishros
 sudo apt install libasio-dev
 
 # 安装ros附加功能包
-sudo apt install ros-humble-cv-bridge ros-humble-camera-calibration-parsers
+sudo apt install ros-$ROS_DISTRO-cv-bridge/
+ros-$ROS_DISTRO-camera-calibration-parsers/
+ros-$ROS_DISTRO-robot_state_publisher/
+ros-$ROS_DISTRO-joint_state_publisher/
 
 # 确保当前Python环境下已经安装以下库
 pip3 install catkin_pkg empy==3.3.4 lark numpy	# 也可使用conda等工具
