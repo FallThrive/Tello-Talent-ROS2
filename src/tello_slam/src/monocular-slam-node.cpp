@@ -68,20 +68,44 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
     }
 
     std::cout << "one frame has been sent" << std::endl;
-    m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
+    // 跟踪当前图像，并缓存最新位姿（仅此处调用TrackMonocular）
+    Sophus::SE3f Tcw = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
+    if (!Tcw.matrix().isZero(0))
+    {
+        std::lock_guard<std::mutex> lk(m_pose_mutex);
+        m_last_Tcw = Tcw;
+        m_has_pose = true;
+        m_last_stamp = msg->header.stamp;
+    }
 }
 
 void MonocularSlamNode::PublishMapPoints()
 {
-    builtin_interfaces::msg::Time stamp = this->now();
+    builtin_interfaces::msg::Time stamp;
+    {
+        std::lock_guard<std::mutex> lk(m_pose_mutex);
+        if (!m_has_pose)
+        {
+            return; // 尚无有效位姿/时间戳
+        }
+        stamp = m_last_stamp;
+    }
     PublishMapTF(stamp);
     PublishPointCloud(stamp);
 }
 
 void MonocularSlamNode::PublishMapTF(const builtin_interfaces::msg::Time &stamp)
 {
-    // 获取ORB-SLAM3的相机位姿 (从跟踪器获取当前帧的位姿)
-    auto Tcw = m_SLAM->TrackMonocular(cv::Mat(), 0); // 获取最新位姿，传入空图像和0时间戳
+    // 从缓存读取最近一次TrackMonocular得到的相机位姿
+    Sophus::SE3f Tcw;
+    {
+        std::lock_guard<std::mutex> lk(m_pose_mutex);
+        if (!m_has_pose)
+        {
+            return; // 还没有有效位姿，直接返回
+        }
+        Tcw = m_last_Tcw;
+    }
 
     // 检查位姿是否有效
     if (!Tcw.matrix().isZero(0))

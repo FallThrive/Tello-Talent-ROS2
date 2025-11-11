@@ -44,6 +44,14 @@ chmod +x src/tello_ros/tello_description/src/replace.py
 colcon build --symlink-install --packages-select ros2_shared tello_description tello_driver tello_msgs
 ```
 
+当然，如果ubuntu系统支持Gazebo Classic，也可以使用以下命令安装（需要指出的是目前Gazebo Classic已经停止维护）
+
+```
+sudo apt install ros-$ROS_DISTRO-gazebo-ros-pkgs
+cd ~/WorkSpace/tello_ws	# 以自己的项目目录为准
+colcon build --symlink-install --packages-select tello_gazebo
+```
+
 ### 可选安装：tello_slam
 
 #### 1. 安装Pangolin
@@ -178,4 +186,3 @@ ros2 run tello_slam mono src/tello_slam/vocabulary/ORBvoc.txt src/tello_slam/con
 - [ ] 部署`OctoMap`并发布地图到ROS话题
 - [ ] 基于YOLO实现目标跟随
 - [ ] 使用大疆RMTT开源控制器拓展配件，使用路由器模式连接其他路由器控制
-- [ ] 重构`tello_gazebo`功能包，适配Gazebo Harmonic

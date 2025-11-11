@@ -6,6 +6,7 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "builtin_interfaces/msg/time.hpp"
 
 #include <cv_bridge/cv_bridge.h>
 
@@ -18,6 +19,7 @@
 #include "utility.hpp"
 
 #include <vector>
+#include <mutex>
 
 class MonocularSlamNode : public rclcpp::Node
 {
@@ -37,6 +39,12 @@ private:
     ORB_SLAM3::System *m_SLAM;
 
     cv_bridge::CvImagePtr m_cvImPtr;
+
+    // Cache latest pose returned by TrackMonocular (camera-to-world Tcw)
+    Sophus::SE3f m_last_Tcw;
+    bool m_has_pose{false};
+    std::mutex m_pose_mutex;
+    builtin_interfaces::msg::Time m_last_stamp; // stamp of the latest valid pose
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr m_image_subscriber;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr m_pointcloud_publisher;
