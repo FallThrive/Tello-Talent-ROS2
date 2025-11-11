@@ -110,14 +110,31 @@ void MonocularSlamNode::PublishMapTF(const builtin_interfaces::msg::Time &stamp)
     // 检查位姿是否有效
     if (!Tcw.matrix().isZero(0))
     {
-        // 获取相机在map坐标系中的位置和姿态
-        auto camera_translation = Tcw.translation();
-        auto camera_rotation = Tcw.so3().matrix();
+        // 计算世界到相机的变换 Twc = Tcw.inverse()
+        Sophus::SE3f Twc = Tcw.inverse();
+        auto world_translation = Twc.translation();
+        auto world_rotation = Twc.so3().matrix();
 
-        // 创建map->base_link的变换
-        // base_link位置 = 相机位置 + 相机旋转 * (base_link相对于camera_link的位置)
-        Eigen::Vector3f base_to_camera(-0.035, 0.0, 0.0); // base_link在camera_link后方0.035m处
-        auto base_link_translation = camera_translation + camera_rotation * base_to_camera;
+        // ORB-SLAM3使用计算机视觉坐标系 (X右, Y下, Z前)
+        // ROS使用机器人坐标系 (X前, Y左, Z上)
+        // 需要进行坐标系转换
+        Eigen::Matrix3f R_cv_to_ros;
+        R_cv_to_ros << 0, 0, 1,
+                      -1, 0, 0,
+                       0,-1, 0;
+
+        // 将世界到相机的变换从CV坐标系转换到ROS坐标系
+        // 对于位置：p_ros = R_cv_to_ros * p_cv
+        // 对于旋转：R_ros = R_cv_to_ros * R_cv * R_cv_to_ros^T
+        Eigen::Vector3f ros_world_position = R_cv_to_ros * world_translation;
+        Eigen::Matrix3f ros_world_rotation = R_cv_to_ros * world_rotation * R_cv_to_ros.transpose();
+
+        // 根据URDF定义，camera_link在base_link前方0.035m处
+        // 所以base_link在camera_link后方-0.035m处（在camera_link坐标系中）
+        Eigen::Vector3f camera_to_base(-0.035, 0.0, 0.0); // 在camera_link坐标系中
+        
+        // 转换到world坐标系：base_link位置 = world位置 + world旋转 * (camera到base的偏移)
+        auto base_link_translation = ros_world_position + ros_world_rotation * camera_to_base;
 
         geometry_msgs::msg::TransformStamped baseTransform;
         baseTransform.header.stamp = stamp;
@@ -128,8 +145,8 @@ void MonocularSlamNode::PublishMapTF(const builtin_interfaces::msg::Time &stamp)
         baseTransform.transform.translation.y = base_link_translation.y();
         baseTransform.transform.translation.z = base_link_translation.z();
 
-        // 使用相机的旋转作为base_link的旋转
-        Eigen::Quaternionf q(camera_rotation);
+        // 使用转换后的旋转作为base_link的旋转
+        Eigen::Quaternionf q(ros_world_rotation);
         baseTransform.transform.rotation.x = q.x();
         baseTransform.transform.rotation.y = q.y();
         baseTransform.transform.rotation.z = q.z();
@@ -151,6 +168,14 @@ void MonocularSlamNode::PublishPointCloud(const builtin_interfaces::msg::Time &s
     // 设置点云的基本信息
     cloud_msg->header.stamp = stamp;
     cloud_msg->header.frame_id = "map";
+
+    // ORB-SLAM3使用计算机视觉坐标系 (X右, Y下, Z前)
+    // ROS使用机器人坐标系 (X前, Y左, Z上)
+    // 需要进行坐标系转换
+    Eigen::Matrix3f R_cv_to_ros;
+    R_cv_to_ros << 0, 0, 1,
+                  -1, 0, 0,
+                   0,-1, 0;
 
     // 至少有一个点才处理
     if (!map_points.empty())
@@ -175,9 +200,11 @@ void MonocularSlamNode::PublishPointCloud(const builtin_interfaces::msg::Time &s
             {
                 // 获取地图点的世界坐标
                 auto pos = map_points[i]->GetWorldPos();
-                *iter_x = pos(0);
-                *iter_y = pos(1);
-                *iter_z = pos(2);
+                // 应用坐标系变换
+                Eigen::Vector3f ros_pos = R_cv_to_ros * pos;
+                *iter_x = ros_pos(0);
+                *iter_y = ros_pos(1);
+                *iter_z = ros_pos(2);
             }
             else
             {

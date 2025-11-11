@@ -12,9 +12,9 @@
 int main(int argc, char **argv)
 {
     // 如果没有提供参数，则使用默认值
-    std::string vocabulary_file = "src/tello_slam/vocabulary/ORBvoc.txt";
-    std::string settings_file = "src/tello_slam/config/tello_cam.yaml";
-    
+    std::string vocabulary_file = "src/tello_extras/tello_slam/vocabulary/ORBvoc.txt";
+    std::string settings_file = "src/tello_extras/tello_slam/config/tello_cam.yaml";
+
     if (argc >= 2) {
         vocabulary_file = argv[1];
     }
