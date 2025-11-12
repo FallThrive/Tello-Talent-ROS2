@@ -7,13 +7,20 @@
 #include "monocular-slam-node.hpp"
 
 #include "System.h"
-
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 int main(int argc, char **argv)
 {
     // 如果没有提供参数，则使用默认值
-    std::string vocabulary_file = "src/tello_extras/tello_slam/vocabulary/ORBvoc.txt";
-    std::string settings_file = "src/tello_extras/tello_slam/config/tello_cam.yaml";
+    std::string vocabulary_file;
+    std::string settings_file;
+
+    // 获取tello_slam包的共享目录
+    std::string package_share_directory = ament_index_cpp::get_package_share_directory("tello_slam");
+    
+    // 构建默认文件路径
+    vocabulary_file = package_share_directory + "/vocabulary/ORBvoc.txt";
+    settings_file = package_share_directory + "/config/tello_cam.yaml";
 
     if (argc >= 2) {
         vocabulary_file = argv[1];

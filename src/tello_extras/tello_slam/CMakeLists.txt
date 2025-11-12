@@ -26,6 +26,7 @@ find_package(Pangolin REQUIRED)
 find_package(ORB_SLAM3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 include_directories(
   include
@@ -48,7 +49,7 @@ add_executable(mono
   src/monocular-slam-node.cpp
 )
 
-ament_target_dependencies(mono rclcpp sensor_msgs geometry_msgs cv_bridge ORB_SLAM3 Pangolin tf2_ros)
+ament_target_dependencies(mono rclcpp sensor_msgs geometry_msgs cv_bridge ORB_SLAM3 Pangolin tf2_ros ament_index_cpp)
 target_link_libraries(mono ${OpenCV_LIBS})
 
 # add_executable(rgbd

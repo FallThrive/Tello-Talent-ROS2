@@ -1,0 +1,109 @@
+# OctoMap 服务器配置参数
+/octomap_server:
+  ros__parameters:
+    # 基础坐标系ID，所有坐标变换的参考系
+    base_frame_id: base_link
+    
+    # 占用栅格的颜色设置 (a: 透明度, r: 红色, g: 绿色, b: 蓝色)
+    color:
+      a: 1.0
+      b: 1.0
+      g: 0.0
+      r: 0.0
+    # 颜色因子，用于根据高度调整颜色
+    color_factor: 0.8
+    
+    # 自由空间（空闲）的颜色设置
+    color_free:
+      a: 1.0
+      b: 0.0
+      g: 1.0
+      r: 0.0
+      
+    # 是否使用彩色地图
+    colored_map: false
+    
+    # 是否压缩地图以节省内存
+    compress_map: true
+    
+    # 是否过滤地面平面
+    filter_ground_plane: false
+    
+    # 是否过滤噪声点（小的独立点）
+    filter_speckles: false
+    
+    # 用于OctoMap的全局坐标系ID
+    frame_id: map
+    
+    # 地面过滤参数
+    ground_filter:
+      # 地面法向量与z轴的最大夹角（弧度）
+      angle: 0.15
+      # 点到地面模型的最大距离
+      distance: 0.04
+      # 地面模型到原点的距离
+      plane_distance: 0.07
+      
+    # 是否使用增量式2D投影
+    incremental_2D_projection: false
+    
+    # 是否锁存话题，使新订阅者能立即收到最近的消息
+    latch: true
+    
+    # Octree的最大深度
+    max_depth: 16
+    
+    # 地图在x轴方向的最小尺寸
+    min_x_size: 0.0
+    # 地图在y轴方向的最小尺寸
+    min_y_size: 0.0
+    
+    # 占用空间在z轴方向的最大高度
+    occupancy_max_z: 100.0
+    # 占用空间在z轴方向的最小高度
+    occupancy_min_z: -100.0
+    
+    # 初始化OctoMap文件的路径（空表示不加载预设地图）
+    octomap_path: ''
+    
+    # 点云在各轴方向上的过滤范围
+    point_cloud_max_x: 1.7976931348623157e+308
+    point_cloud_max_y: 1.7976931348623157e+308
+    point_cloud_max_z: 100.0
+    point_cloud_min_x: -1.7976931348623157e+308
+    point_cloud_min_y: -1.7976931348623157e+308
+    point_cloud_min_z: -100.0
+    
+    # 是否发布自由空间
+    publish_free_space: false
+    
+    # QoS参数配置
+    qos_overrides:
+      /parameter_events:
+        publisher:
+          depth: 1000
+          durability: volatile
+          history: keep_last
+          reliability: reliable
+          
+    # 地图分辨率（体素大小，单位：米）
+    resolution: 0.01
+    
+    # 传感器模型参数
+    sensor_model:
+      # 传感器检测到障碍物时的命中概率
+      hit: 0.7
+      # 最大占用概率
+      max: 0.97
+      # 传感器的最大有效距离
+      max_range: 5.0
+      # 最小占用概率
+      min: 0.12
+      # 传感器未检测到障碍物时的未命中概率
+      miss: 0.4
+      
+    # 是否使用高度图
+    use_height_map: false
+    
+    # 是否使用仿真时间
+    use_sim_time: false
