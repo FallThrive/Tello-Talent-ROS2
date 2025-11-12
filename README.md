@@ -1,6 +1,6 @@
 # Tello-Talent-ROS2
 
-此项目是基于[tello_ros](https://github.com/clydemcqueen/tello_ros)项目的二次开发，使用大疆RoboMaster Tello Talent (RMTT)无人机，集成ORB_SLAM3，并在ROS2-humble环境中进行测试。
+此项目是基于[tello_ros](https://github.com/clydemcqueen/tello_ros)项目的二次开发，使用大疆RoboMaster Tello Talent (RMTT)无人机，调用ORB_SLAM3与OctoMap进行建图，并在ROS2-humble环境中进行测试。
 
 [tello_ros](https://github.com/clydemcqueen/tello_ros)项目的详细说明请参阅[src/tello_ros/README.md](src/tello_ros/README.md).
 
@@ -150,7 +150,7 @@ tello_ws/
 │   │   └── tello_msgs/         # 自定义消息类型
 │   └── tello_extras/     # 扩展功能包
 │       ├── tello_slam/         # SLAM功能实现包
-│       └── tello_yolo/			# YOLO目标跟随（计划中）
+│       └── tello_yolo/         # YOLO目标跟随（计划中）
 ├── build/                # 编译输出目录（已忽略）
 ├── install/              # 安装目录（已忽略）
 └── log/                  # 日志目录（已忽略）
@@ -240,7 +240,7 @@ OctoMap将会发布以下话题：
 
 ## ToDoList
 
-- [x] 编译`tello_ros`原项目，在ROS2-humble中成功实现基本功能
+- [x] 编译tello_ros项目，在ROS2-humble中测试基本功能
 - [x] 使用键盘控制无人机运动
 - [x] 使用ORB_SLAM3发布点云话题
 - [x] 使用OctoMap建立栅格地图
