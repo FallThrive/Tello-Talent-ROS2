@@ -51,6 +51,10 @@ namespace tello_driver
     rclcpp::Publisher<tello_msgs::msg::FlightData>::SharedPtr flight_data_pub_;
     rclcpp::Publisher<tello_msgs::msg::TelloResponse>::SharedPtr tello_response_pub_;
 
+    // Cached state for video overlay
+    std::atomic<int> battery_percentage_{0};
+    std::atomic<int> tof_{0}; // ToF height in cm
+
   private:
 
     void timer_callback();

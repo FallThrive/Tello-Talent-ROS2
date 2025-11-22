@@ -28,11 +28,6 @@ namespace tello_driver
 
     receive_time_ = driver_->now();
 
-    if (receiving_ && driver_->count_subscribers(driver_->flight_data_pub_->get_topic_name()) == 0) {
-      // Nothing to do
-      return;
-    }
-
     // Split on ";" and ":" and generate a key:value map
     std::map<std::string, std::string> fields;
     std::string raw(buffer_.begin(), buffer_.begin() + r);
@@ -40,6 +35,14 @@ namespace tello_driver
     for (auto i = std::sregex_iterator(raw.begin(), raw.end(), re); i != std::sregex_iterator(); ++i) {
       auto match = *i;
       fields[match[1]] = match[2];
+    }
+
+    // Update cached state
+    try {
+      if (fields.count("bat")) driver_->battery_percentage_ = std::stoi(fields["bat"]);
+      if (fields.count("tof")) driver_->tof_ = std::stoi(fields["tof"]);
+    } catch (std::exception e) {
+      RCLCPP_ERROR(driver_->get_logger(), "Can't parse flight data for cache");
     }
 
     // First message?

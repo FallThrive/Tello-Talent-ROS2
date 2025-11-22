@@ -90,10 +90,6 @@ namespace tello_driver
           // Convert to cv::Mat
           cv::Mat mat{frame.height, frame.width, CV_8UC3, bgr24};
 
-          // Display
-          cv::imshow("frame", mat);
-          cv::waitKey(1);
-
           // Synchronize ROS messages
           auto stamp = driver_->now();
 
@@ -111,6 +107,30 @@ namespace tello_driver
             camera_info_msg_.header.stamp = stamp;
             driver_->camera_info_pub_->publish(camera_info_msg_);
           }
+
+          // Draw battery and ToF height
+          std::string bat_text = "Bat: " + std::to_string(driver_->battery_percentage_) + "%";
+          std::string tof_text = "ToF: " + std::to_string(driver_->tof_) + "cm";
+
+          // Use green color
+          cv::Scalar color(0, 255, 0);
+          int font = cv::FONT_HERSHEY_SIMPLEX;
+          double scale = 1.0;
+          int thickness = 2;
+          int baseline = 0;
+
+          cv::Size bat_size = cv::getTextSize(bat_text, font, scale, thickness, &baseline);
+          cv::Size tof_size = cv::getTextSize(tof_text, font, scale, thickness, &baseline);
+
+          // Left bottom
+          cv::putText(mat, bat_text, cv::Point(10, mat.rows - 10), font, scale, color, thickness);
+
+          // Right bottom
+          cv::putText(mat, tof_text, cv::Point(mat.cols - tof_size.width - 10, mat.rows - 10), font, scale, color, thickness);
+
+          // Display
+          cv::imshow("frame", mat);
+          cv::waitKey(1);
         }
 
         next += consumed;
